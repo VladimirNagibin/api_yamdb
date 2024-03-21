@@ -46,8 +46,6 @@ class CustomUser(AbstractUser):
         default=USER,
         verbose_name='Роль')
     is_admin = models.BooleanField(default=False)
-    is_user = models.BooleanField(default=True)
-    is_moderator = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'пользователь'

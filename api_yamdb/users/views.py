@@ -2,7 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -24,17 +24,20 @@ class UserCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         serializer = UserCreationSerializer(data=request.data)
-        if serializer.is_valid():
-            user = CustomUser.objects.create(**serializer.validated_data)
-            confirmation_code = default_token_generator.make_token(user)
-            confirm_send_mail(user.email, confirmation_code)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        user = get_object_or_404(
-            CustomUser, username=serializer.data.get('username'))
+        if CustomUser.objects.filter(
+            username=request.data.get('username'),
+            email=request.data.get('email')
+        ):
+            user = CustomUser.objects.get(
+                username=request.data.get('username'))
+            serializer = UserCreationSerializer(user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        username = request.data.get('username')
+        user = CustomUser.objects.get(username=username)
         confirmation_code = default_token_generator.make_token(user)
         confirm_send_mail(user.email, confirmation_code)
-        return Response('Пользователь уже существует. '
-                        'Код подтверждения повторно выслан на почту')
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UserTokenCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -69,6 +72,14 @@ class AdminUserViewSet(
     permission_classes = (AdminOrSuperUserOnly, )
     filter_backends = (filters.SearchFilter, )
     search_fields = ('username', )
+
+    def create(self, request, *args, **kwargs):
+        print('1111111111')
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_403_FORBIDDEN)
 
     @action(
         detail=False,
