@@ -1,24 +1,33 @@
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from core.models import NameModel, NameSlugModel
 
-User = get_user_model()
+
+class Category(NameSlugModel):
+    pass
 
 
-class Title(models.Model):
-    name = models.TextField(verbose_name='Текст')
+class Genre(NameSlugModel):
+    pass
 
-    class Meta:
-        verbose_name = 'произведение'
-        verbose_name_plural = 'Произведения'
 
-    def __str__(self):
-        return self.name
+class Title(NameModel):
+    year = models.IntegerField()
+    description = models.TextField()
+    category = models.ForeignKey(Category,
+                                 on_delete=models.SET_NULL,
+                                 null=True)
+    genre = models.ManyToManyField(Genre, through='GenreTitle')
+
+
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
 
 class Review(models.Model):
     title = models.ForeignKey(
-        Title,  # модель Title подключаем из другой ветки проекта
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews', verbose_name='Произведение')
     text = models.TextField(verbose_name='Текст')
