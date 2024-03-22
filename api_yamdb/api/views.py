@@ -2,11 +2,13 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, viewsets
 from rest_framework.pagination import PageNumberPagination
 
-from .permissions import IsAdminOrSuperuserOrReadOnly
+from .permissions import (IsAdminOrSuperuserOrReadOnly,
+                          IsAdminOrAuthorOrReadOnly)
 from .serializers import (
-    CategorySerializer, GenreSerializer, TitleSerializer, ReviewSerializer
+    CategorySerializer, GenreSerializer, TitleSerializer,
+    ReviewSerializer, CommentSerializer
 )
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review, Comments
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -41,20 +43,44 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для операций с моделью Review."""
 
     serializer_class = ReviewSerializer
+    permission_classes = (IsAdminOrAuthorOrReadOnly,)
     pagination_class = PageNumberPagination
 
     def get_title_object(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_serializer_context(self):
-        return {'title_id': self.kwargs['title_id']}
+        """Добавление дополнительных данных для передачи в сериализатор."""
+        return {'title_id': self.kwargs['title_id'],
+                'request': self.request}
 
     def perform_create(self, serializer):
         """Переопределение единичной операции сохранения объекта модели."""
         serializer.save(
-            # author=self.request.user,  # подключаем по мере готовности User
+            author=self.request.user,
             title=self.get_title_object()
         )
 
     def get_queryset(self):
         return self.get_title_object().reviews.all()
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет для операций с моделью Comment."""
+
+    serializer_class = CommentSerializer
+    permission_classes = (IsAdminOrAuthorOrReadOnly,)
+    pagination_class = PageNumberPagination
+
+    def get_post_object(self):
+        return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+
+    def perform_create(self, serializer):
+        """Переопределение единичной операции сохранения объекта модели."""
+        serializer.save(
+            author=self.request.user,
+            post=self.get_post_object()
+        )
+
+    def get_queryset(self):
+        return self.get_post_object().comments.all()

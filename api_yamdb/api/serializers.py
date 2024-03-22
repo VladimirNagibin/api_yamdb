@@ -4,10 +4,9 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from rest_framework.validators import UniqueTogetherValidator
 
-
-from reviews.models import Title, Genre, Category, Review
+from reviews.models import Title, Genre, Category, Review, Comments
+from users.models import CustomUser
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -63,26 +62,28 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    # author = SlugRelatedField(read_only=True, slug_field='username')
-    author = serializers.IntegerField(read_only=True, default=1)  # заменить
-    # title = serializers.HiddenField()
+    author = SlugRelatedField(queryset=CustomUser.objects.all(),
+                              slug_field='username',
+                              default=serializers.CurrentUserDefault())
 
     class Meta:
-        exclude = ('title',)
-        # fields = '__all__'
         model = Review
+        exclude = ('title',)
 
-        validators = [
-            UniqueTogetherValidator(queryset=Review.objects.all(),
-                                    fields=('text', 'author'))
-        ]
+    def validate_author(self, author_value):
+        """Проверка уникальности пары title-author через базу Review."""
+        title_value = get_object_or_404(Title, pk=self.context['title_id'])
+        if Review.objects.filter(
+            title=title_value, author=author_value
+        ).exists() and self.context['request'].method != 'PUT':
+            raise serializers.ValidationError(
+                'Невозможно создать второй отзыв на то же произведение!')
+        return author_value
 
-    def create(self, validated_data):
-        title_id = self.context['title_id']
-        print('title_id = ', title_id)
-        validated_data['title'] = get_object_or_404(Title, pk=title_id)
-        return super(ReviewSerializer, self).create(validated_data)
 
-    # def get_title_object(self):
-    #     title_id = self.context['title_id']
-    #     return get_object_or_404(Title, pk=title_id)
+class CommentSerializer(serializers.ModelSerializer):
+    author = SlugRelatedField(read_only=True, slug_field='username')
+
+    class Meta:
+        model = Comments
+        exclude = ('review',)
