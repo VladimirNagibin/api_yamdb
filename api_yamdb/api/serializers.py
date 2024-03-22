@@ -21,27 +21,26 @@ class GenreSerializer(serializers.ModelSerializer):
         fields = ('name', 'slug')
 
 
-class CategoryField(serializers.Field):
+class CategoryRelatedField(SlugRelatedField):
     def to_representation(self, value):
         return CategorySerializer(value).data
 
-    def to_internal_value(self, data):
-        return get_object_or_404(Category, slug=data)
 
-
-class GenreField(serializers.Field):
+class GenreRelatedField(SlugRelatedField):
     def to_representation(self, value):
-        return GenreSerializer(value, many=True).data
-
-    def to_internal_value(self, data):
-        return [get_object_or_404(Genre, slug=slug) for slug in data]
+        return GenreSerializer(value).data
 
 
 class TitleSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
     description = serializers.CharField(required=False)
-    category = CategoryField()
-    genre = GenreField()
+    category = CategoryRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
+    genre = GenreRelatedField(
+        slug_field='slug', many=True, queryset=Genre.objects.all()
+    )
+    name = serializers.CharField(max_length=256)
 
     class Meta:
         model = Title
@@ -54,11 +53,15 @@ class TitleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Проверьте год выпуска!')
         return value
 
+    def validate_genre(self, value):
+        if not value:
+            raise serializers.ValidationError('Не передали слаги жанров!')
+        return value
+
     def get_rating(self, obj):
-        # rating = obj.reviews.aggregate(Avg('score'))['score__avg']
-        # if rating:
-        #    return round(rating, 2)
-        return 5
+        rating = obj.reviews.aggregate(Avg('score'))['score__avg']
+        if rating:
+            return round(rating, 2)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
