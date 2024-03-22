@@ -4,13 +4,13 @@ from django.db import models
 
 
 class CustomUser(AbstractUser):
-    USER = 'User'
-    ADMIN = 'Admin'
-    MODERATOR = 'Moderator'
+    USER = 'user'
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
     ROLE_CHOICES = (
-        (USER, 'User'),
-        (ADMIN, 'Admin'),
-        (MODERATOR, 'Moderator'),
+        (USER, 'user'),
+        (ADMIN, 'admin'),
+        (MODERATOR, 'moderator'),
     )
 
     username = models.CharField(
@@ -45,11 +45,11 @@ class CustomUser(AbstractUser):
         choices=ROLE_CHOICES,
         default=USER,
         verbose_name='Роль')
-    is_admin = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
+        ordering = ('id',)
 
     def __str__(self):
         return self.username
