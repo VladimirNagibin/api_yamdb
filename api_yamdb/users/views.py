@@ -2,7 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -48,7 +48,7 @@ class UserTokenCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     def create(self, request, *args, **kwargs):
         serializer = UserTokenCreationSerializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             username = serializer.validated_data.get('username')
             user = get_object_or_404(CustomUser, username=username)
             confirmation_code = serializer.validated_data.get(
@@ -60,7 +60,6 @@ class UserTokenCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
             return Response(str(AccessToken.for_user(user)),
                             status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class AdminUserViewSet(
@@ -73,26 +72,18 @@ class AdminUserViewSet(
     filter_backends = (filters.SearchFilter, )
     search_fields = ('username', )
 
-    def create(self, request, *args, **kwargs):
-        print('1111111111')
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_403_FORBIDDEN)
-
     @action(
         detail=False,
         methods=['GET', 'PATCH', 'DELETE'],
         url_path=r'(?P<username>[\w.@+-]+)',
-        url_name='get_user'
+        url_name='get_user',
     )
     def get_user(self, request, username):
         """Функция отвечающая за работу с конкретным пользователем."""
         user = get_object_or_404(CustomUser, username=username)
         if request.method == 'PATCH':
             serializer = UserSerializer(user, data=request.data, partial=True)
-            serializer.is_valid()
+            serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif request.method == 'DELETE':
@@ -110,18 +101,15 @@ class AdminUserViewSet(
     )
     def get_patch_self(self, request):
         """Функция позволяющая получить данные о себе и редактировать их."""
+        print(request.user.role)
         if request.method == 'PATCH':
             serializer = UserSerializer(
                 request.user,
                 data=request.data,
                 partial=True
             )
-            if serializer.is_valid():
+            if serializer.is_valid(raise_exception=True):
                 serializer.save(role=request.user.role)
                 return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
