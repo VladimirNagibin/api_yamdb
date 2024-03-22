@@ -10,7 +10,7 @@ from .serializers import (
     CategorySerializer, GenreSerializer, TitleSerializer,
     ReviewSerializer, CommentSerializer
 )
-from reviews.models import Category, Genre, Title, Review, Comments
+from reviews.models import Category, Genre, Title, Review
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -46,6 +46,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для операций с моделью Review."""
 
     serializer_class = ReviewSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']  # 'PUT' excluding
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
     pagination_class = PageNumberPagination
 
@@ -72,18 +73,19 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для операций с моделью Comment."""
 
     serializer_class = CommentSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']  # 'PUT' excluding
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
     pagination_class = PageNumberPagination
 
-    def get_post_object(self):
+    def get_review_object(self):
         return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
 
     def perform_create(self, serializer):
         """Переопределение единичной операции сохранения объекта модели."""
         serializer.save(
             author=self.request.user,
-            post=self.get_post_object()
+            review=self.get_review_object()
         )
 
     def get_queryset(self):
-        return self.get_post_object().comments.all()
+        return self.get_review_object().comments.all()
