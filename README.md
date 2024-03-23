@@ -131,7 +131,7 @@ python manage.py load_data
 
 Более подробные данные: http://127.0.0.1:8000/redoc/
 
-### Авторы проекта
+## Авторы проекта
 - Владимир Нагибин (Github: [@VladimirNagibin](https://github.com/VladimirNagibin/))
 - Сергей Желудков (Github: [@SergeyZheludkov](https://github.com/SergeyZheludkov/))
 - Вадим Трахимец (Github: [@Tantal25](https://github.com/Tantal25/))
