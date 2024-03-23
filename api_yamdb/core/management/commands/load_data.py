@@ -1,14 +1,14 @@
-
 import csv
 
 from django.apps import apps
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 
 from reviews.models import Category, Comments, Genre, Title, Review
 
-FOLDER = 'static/data/'
+DIR_DATA = settings.BASE_DIR / 'static/data'
 DATA = (
     ('users.csv',
      get_user_model(),
@@ -31,8 +31,8 @@ DATA = (
 class Command(BaseCommand):
 
     def load_obj(self, filename, obj, fields):
-        with open(f'{FOLDER}{filename}') as file_date:
-            reader = csv.reader(file_date)
+        with open(f'{DIR_DATA}/{filename}') as file_data:
+            reader = csv.reader(file_data)
             header = next(reader)
             if header == fields:
                 for row in reader:

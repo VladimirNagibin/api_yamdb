@@ -1,6 +1,6 @@
-
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from core.models import NameModel, NameSlugModel
 from users.models import CustomUser
 
