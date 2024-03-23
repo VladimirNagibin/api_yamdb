@@ -49,6 +49,12 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+Загрузить тесостовые данные:
+
+```
+python manage.py load_data
+```
+(ключ -e (--erase) позволяет предварительно очистить таблицу)
 
 ## Регистрация пользователей
 Пользователь отправляет POST-запрос с параметрами username, email на эндпоинт: /api/v1/auth/signup/
@@ -121,3 +127,7 @@ python manage.py runserver
 
 Более подробные данные: http://127.0.0.1:8000/redoc/
 
+### Авторы проекта
+Владимир Нагибин (Github: @VladimirNagibin)
+Сергей Желудков (Github: SergeyZheludkov)
+Вадим Трахимец (Github: Tantal25)

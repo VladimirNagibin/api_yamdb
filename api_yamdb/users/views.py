@@ -33,8 +33,7 @@ class UserCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             serializer = UserCreationSerializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        username = request.data.get('username')
-        user = CustomUser.objects.get(username=username)
+        user = CustomUser.objects.get(username=request.data.get('username'))
         confirmation_code = default_token_generator.make_token(user)
         confirm_send_mail(user.email, confirmation_code)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -49,8 +48,8 @@ class UserTokenCreateViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         serializer = UserTokenCreationSerializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
-            username = serializer.validated_data.get('username')
-            user = get_object_or_404(CustomUser, username=username)
+            user = get_object_or_404(
+                CustomUser, username=serializer.validated_data.get('username'))
             confirmation_code = serializer.validated_data.get(
                 'confirmation_code')
             if not default_token_generator.check_token(
@@ -101,7 +100,6 @@ class AdminUserViewSet(
     )
     def get_patch_self(self, request):
         """Функция позволяющая получить данные о себе и редактировать их."""
-        print(request.user.role)
         if request.method == 'PATCH':
             serializer = UserSerializer(
                 request.user,
