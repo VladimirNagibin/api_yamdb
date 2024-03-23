@@ -18,5 +18,5 @@ class IsAdminOrAuthorOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
         return bool(
             request.method in permissions.SAFE_METHODS or (
                 request.user and review_or_comment_obj.author == request.user
-            ) or request.user.is_stuff
+            ) or request.user.is_staff
         )

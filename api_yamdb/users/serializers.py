@@ -30,3 +30,8 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
+
+    def validate(self, data):
+        if data.get('username') == 'me':
+            raise serializers.ValidationError('Использование me запрещено')
+        return data
