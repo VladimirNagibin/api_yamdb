@@ -1,10 +1,8 @@
-# from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from core.models import NameModel, NameSlugModel
 from users.models import CustomUser
-
-# User = get_user_model()
 
 
 class Category(NameSlugModel):
@@ -21,12 +19,7 @@ class Title(NameModel):
     category = models.ForeignKey(Category,
                                  on_delete=models.SET_NULL,
                                  null=True)
-    genre = models.ManyToManyField(Genre, through='GenreTitle')
-
-
-class GenreTitle(models.Model):
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre = models.ManyToManyField(Genre)
 
 
 class Review(models.Model):
@@ -52,6 +45,12 @@ class Review(models.Model):
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
         ordering = ('id',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['title', 'author'],
+                name='unique_title_author'
+            )
+        ]
 
     def __str__(self):
         return self.text
