@@ -27,7 +27,7 @@ class NameSlugModel(NameModel):
         abstract = True
 
 
-class ReviewCommentsModel(models.Model):
+class TextAuthorPubDateModel(models.Model):
     text = models.TextField(verbose_name='Текст')
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name='Автор'

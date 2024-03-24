@@ -2,7 +2,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .constants import MIN_SCORE, MAX_SCORE
-from core.models import NameModel, NameSlugModel, ReviewCommentsModel
+from core.models import NameModel, NameSlugModel, TextAuthorPubDateModel
 
 
 class Category(NameSlugModel):
@@ -22,17 +22,17 @@ class Title(NameModel):
     genre = models.ManyToManyField(Genre)
 
 
-class Review(ReviewCommentsModel):
+class Review(TextAuthorPubDateModel):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, verbose_name='Произведение'
     )
     score = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(MIN_SCORE),
-                    MaxValueValidator(MAX_SCORE)],
+        validators=(MinValueValidator(MIN_SCORE),
+                    MaxValueValidator(MAX_SCORE)),
         verbose_name='Оценка'
     )
 
-    class Meta(ReviewCommentsModel.Meta):
+    class Meta(TextAuthorPubDateModel.Meta):
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
         default_related_name = 'reviews'
@@ -44,12 +44,12 @@ class Review(ReviewCommentsModel):
         ]
 
 
-class Comments(ReviewCommentsModel):
+class Comments(TextAuthorPubDateModel):
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, verbose_name='Отзыв'
     )
 
-    class Meta(ReviewCommentsModel.Meta):
+    class Meta(TextAuthorPubDateModel.Meta):
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
         default_related_name = 'comments'
