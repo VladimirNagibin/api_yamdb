@@ -18,13 +18,30 @@ class ReviewAdmin(admin.ModelAdmin):
 
 class UserAdmin(admin.ModelAdmin):
     list_dispaly = ('__all__',)
-    list_filter = ['is_staff', 'role']
-    search_fields = ['username']
+    list_filter = ('is_staff', 'role')
+    search_fields = ('username',)
 
 
-admin.site.register(Title)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    search_fields = ('name', 'slug')
+
+
+class GenreAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug')
+    search_fields = ('name', 'slug')
+
+
+class TitleAdmin(admin.ModelAdmin):
+    list_display = ('description', 'year', 'category')
+    search_fields = ('description', 'year')
+    list_filter = ('year', 'category')
+    filter_horizontal = ('genre',)
+
+
+admin.site.register(Title, TitleAdmin)
+admin.site.register(Category, CategoryAdmin)
+admin.site.register(Genre, GenreAdmin)
 admin.site.register(Review, ReviewAdmin)
-admin.site.register(Category)
-admin.site.register(Genre)
 admin.site.register(Comments, CommentsAdmin)
 admin.site.register(User, UserAdmin)
