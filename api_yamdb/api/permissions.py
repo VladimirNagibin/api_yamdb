@@ -5,9 +5,7 @@ class IsAdminOrSuperuserOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return (
-            ((not request.user.is_anonymous) and (
-                request.user.is_superuser
-                or request.user.role == 'admin'))
+            ((not request.user.is_anonymous) and (request.user.is_admin))
             or request.method in permissions.SAFE_METHODS
         )
 
@@ -18,5 +16,11 @@ class IsAdminOrAuthorOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
         return bool(
             request.method in permissions.SAFE_METHODS or (
                 request.user and review_or_comment_obj.author == request.user
-            ) or request.user.role in ('admin', 'moderator')
+            ) or request.user.is_admin or request.user.is_moderator
         )
+
+
+class IsAdminOrSuperUserOnly(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_admin

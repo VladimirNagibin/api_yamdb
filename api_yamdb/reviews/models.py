@@ -1,8 +1,13 @@
+from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .constants import MIN_SCORE, MAX_SCORE
 from core.models import NameModel, NameSlugModel, TextAuthorPubDateModel
+
+User = get_user_model()
+
+TEXT_LIMIT = 50
 
 
 class Category(NameSlugModel):

@@ -92,11 +92,13 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = 'users.User'
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
+EMAIL_HOST_USER = 'YaMDB@yandex.ru'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
