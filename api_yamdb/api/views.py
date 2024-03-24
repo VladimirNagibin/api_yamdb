@@ -45,14 +45,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для операций с моделью Review."""
 
     serializer_class = ReviewSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']  # 'PUT' excluding
+    http_method_names = ('get', 'post', 'patch', 'delete')  # 'PUT' excluding
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
 
     def get_title_object(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
     def get_serializer_context(self):
-        """Добавление дополнительных данных для передачи в сериализатор."""
+        """Добавление дополнительных данных для передачи в сериализатор.
+
+        При отсутствии данного метода в сериализаторе не будет данных для
+        необходимого метода класса CurrentUserDefault() и
+        метода validate_author.
+        """
         return {'title_id': self.kwargs['title_id'],
                 'request': self.request}
 
@@ -71,13 +76,12 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для операций с моделью Comment."""
 
     serializer_class = CommentSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']  # 'PUT' excluding
+    http_method_names = ('get', 'post', 'patch', 'delete')  # 'PUT' excluding
     permission_classes = (IsAdminOrAuthorOrReadOnly,)
 
     def get_review_object(self):
-        title_value = get_object_or_404(Title, pk=self.kwargs['title_id'])
         return get_object_or_404(Review, pk=self.kwargs.get('review_id'),
-                                 title=title_value)
+                                 title=self.kwargs['title_id'])
 
     def perform_create(self, serializer):
         """Переопределение единичной операции сохранения объекта модели."""
@@ -88,8 +92,3 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.get_review_object().comments.all()
-
-    def get_serializer_context(self):
-        """Добавление дополнительных данных для передачи в сериализатор."""
-        return {'title_id': self.kwargs['title_id'],
-                'review_id': self.kwargs['review_id']}
