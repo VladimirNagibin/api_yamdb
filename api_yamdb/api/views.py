@@ -41,6 +41,10 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
 
+class Http400(Exception):
+    pass
+
+
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для операций с моделью Review."""
 
