@@ -1,10 +1,8 @@
-import datetime as dt
-
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
+from reviews.constants import NAME_MAX_LENGHT
 from reviews.models import Title, Genre, Category, Review, Comments
 from users.models import CustomUser
 
@@ -32,36 +30,25 @@ class GenreRelatedField(SlugRelatedField):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True, default=0)
     description = serializers.CharField(required=False)
     category = CategoryRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
     genre = GenreRelatedField(
-        slug_field='slug', many=True, queryset=Genre.objects.all()
+        slug_field='slug',
+        many=True,
+        queryset=Genre.objects.all(),
+        allow_null=False,
+        allow_empty=False
     )
-    name = serializers.CharField(max_length=256)
+    name = serializers.CharField(max_length=NAME_MAX_LENGHT)
 
     class Meta:
         model = Title
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
-
-    def validate_year(self, value):
-        if not (0 < value <= dt.date.today().year):
-            raise serializers.ValidationError('Проверьте год выпуска!')
-        return value
-
-    def validate_genre(self, value):
-        if not value:
-            raise serializers.ValidationError('Не передали слаги жанров!')
-        return value
-
-    def get_rating(self, obj):
-        rating = obj.reviews.aggregate(Avg('score'))['score__avg']
-        if rating:
-            return round(rating, 2)
 
 
 class ReviewSerializer(serializers.ModelSerializer):

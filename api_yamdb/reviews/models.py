@@ -1,3 +1,5 @@
+import datetime as dt
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -10,20 +12,38 @@ TEXT_LIMIT = 50
 
 
 class Category(NameSlugModel):
-    pass
+    class Meta(NameSlugModel.Meta):
+        verbose_name = 'категория'
+        verbose_name_plural = 'Категории'
 
 
 class Genre(NameSlugModel):
-    pass
+    class Meta(NameSlugModel.Meta):
+        verbose_name = 'жанр'
+        verbose_name_plural = 'Жанры'
 
 
 class Title(NameModel):
-    year = models.IntegerField()
-    description = models.TextField()
+    year = models.PositiveSmallIntegerField(
+        validators=(
+            MaxValueValidator(dt.date.today().year,
+                              message='Проверьте год выпуска!'),
+        ),
+        verbose_name='Год выпуска',
+        db_index=True
+    )
+    description = models.TextField('Описание')
     category = models.ForeignKey(Category,
                                  on_delete=models.SET_NULL,
-                                 null=True)
-    genre = models.ManyToManyField(Genre)
+                                 verbose_name='Категория',
+                                 null=True,
+                                 blank=True)
+    genre = models.ManyToManyField(Genre, verbose_name='Жанр')
+
+    class Meta(NameModel.Meta):
+        verbose_name = 'произведение'
+        verbose_name_plural = 'Произведения'
+        default_related_name = 'titles'
 
 
 class Review(models.Model):
@@ -35,7 +55,7 @@ class Review(models.Model):
         User, on_delete=models.CASCADE, verbose_name='Автор'
     )
     score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        validators=(MinValueValidator(1), MaxValueValidator(10)),
         verbose_name='Рейтинг'
     )
     pub_date = models.DateTimeField(

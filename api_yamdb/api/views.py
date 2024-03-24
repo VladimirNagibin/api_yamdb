@@ -1,9 +1,10 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
 
 from .filters import TitleFilter
-from .permissions import (IsAdminOrSuperuserOrReadOnly,
+from .permissions import (IsAdminOrReadOnly,
                           IsAdminOrAuthorOrReadOnly)
 from .serializers import (
     CategorySerializer, GenreSerializer, TitleSerializer,
@@ -16,7 +17,7 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                mixins.DestroyModelMixin,
                                viewsets.GenericViewSet):
-    permission_classes = (IsAdminOrSuperuserOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -33,11 +34,15 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.select_related('category').prefetch_related(
+        'genre'
+    ).annotate(rating=Avg('reviews__score'))
     serializer_class = TitleSerializer
-    permission_classes = (IsAdminOrSuperuserOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = TitleFilter
+    ordering_fields = ('name', 'year')
+    ordering = ('name',)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
 

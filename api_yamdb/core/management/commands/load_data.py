@@ -31,29 +31,36 @@ DATA = (
 class Command(BaseCommand):
 
     def load_obj(self, filename, obj, fields):
-        with open(f'{DIR_DATA}/{filename}') as file_data:
-            reader = csv.reader(file_data)
-            header = next(reader)
-            if header == fields:
-                for row in reader:
-                    object_value = {
-                        key: value for key, value in zip(header, row)
-                    }
-                    try:
-                        obj.objects.update_or_create(**object_value)
-                    except IntegrityError:
-                        print(f'Не корректные данные: {object_value} '
-                              f'для {obj.__name__}')
-            else:
-                print(
-                    f'Структура полей не соответствует таблице {obj.__name__}'
-                )
+        try:
+            with open(f'{DIR_DATA}/{filename}', encoding='utf-8') as file_data:
+                reader = csv.reader(file_data)
+                header = next(reader)
+                if header == fields:
+                    for row in reader:
+                        object_value = {
+                            key: value for key, value in zip(header, row)
+                        }
+                        try:
+                            obj.objects.update_or_create(**object_value)
+                        except IntegrityError:
+                            return (f'Файл {filename} не корректные данные: '
+                                    f'{object_value} для {obj.__name__}')
+                else:
+                    return (f'Файл {filename} cтруктура полей не '
+                            f'соответствует таблице {obj.__name__}')
+        except FileNotFoundError:
+            return f'Файл {filename} невозможно открыть'
+        except Exception as e:
+            return f"Ошибка {e} при работе с файлом {filename}"
+        return f'Файл {filename} загружен'
 
     def handle(self, *args, **kwargs):
+        report = ''
         for filename, obj, fields in DATA:
             if kwargs['erase']:
                 obj.objects.all().delete()
-            self.load_obj(filename, obj, fields)
+            report += self.load_obj(filename, obj, fields) + '\n'
+        return report
 
     def add_arguments(self, parser):
         parser.add_argument(
