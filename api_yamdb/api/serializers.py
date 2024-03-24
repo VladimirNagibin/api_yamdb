@@ -1,12 +1,15 @@
 import datetime as dt
 
+from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
+from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Category, Comments, Genre, Review, Title
 
-from reviews.models import Title, Genre, Category, Review, Comments
-from users.models import CustomUser
+from users.models import User
+from users.services import confirm_send_mail
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -65,7 +68,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(queryset=CustomUser.objects.all(),
+    author = SlugRelatedField(queryset=User.objects.all(),
                               slug_field='username',
                               default=serializers.CurrentUserDefault())
 
@@ -88,3 +91,54 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
         exclude = ('review',)
+
+
+class ValidateUsernameMixin:
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError('Использование me запрещено')
+        return value
+
+
+class UserCreationSerializer(
+    serializers.ModelSerializer,
+    ValidateUsernameMixin
+):
+    """Сериализатор для регистрации пользователя."""
+
+    class Meta:
+        model = User
+        fields = ('username', 'email')
+
+    def create(self, validated_data):
+        user = User.objects.create(**validated_data)
+        confirmation_code = default_token_generator.make_token(user)
+        confirm_send_mail(user.email, confirmation_code)
+        return user
+
+
+class UserTokenCreationSerializer(
+    serializers.Serializer,
+    ValidateUsernameMixin
+):
+    """Сериализатор для получения токена пользователем."""
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
+
+    def create(self, validated_data):
+        user = get_object_or_404(User, username=self.data.get('username'))
+        if not default_token_generator.check_token(
+            user, validated_data.get('confirmation_code')
+        ):
+            raise serializers.ValidationError('Неверный код потверждения')
+        return str(AccessToken.for_user(user))
+
+
+class UserSerializer(serializers.ModelSerializer, ValidateUsernameMixin):
+    """Сериализатор для работы с моделью User."""
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+        )

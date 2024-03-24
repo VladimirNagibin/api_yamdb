@@ -1,15 +1,21 @@
+from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, viewsets
+from rest_framework import filters, mixins, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from reviews.models import Category, Genre, Review, Title
 
 from .filters import TitleFilter
-from .permissions import (IsAdminOrSuperuserOrReadOnly,
-                          IsAdminOrAuthorOrReadOnly)
-from .serializers import (
-    CategorySerializer, GenreSerializer, TitleSerializer,
-    ReviewSerializer, CommentSerializer
-)
-from reviews.models import Category, Genre, Title, Review
+from .permissions import (AdminOrSuperUserOnly, IsAdminOrAuthorOrReadOnly,
+                          IsAdminOrSuperuserOrReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReviewSerializer, TitleSerializer,
+                          UserCreationSerializer, UserSerializer,
+                          UserTokenCreationSerializer)
+from users.models import User
+from users.services import confirm_send_mail
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -93,3 +99,67 @@ class CommentViewSet(viewsets.ModelViewSet):
         """Добавление дополнительных данных для передачи в сериализатор."""
         return {'title_id': self.kwargs['title_id'],
                 'review_id': self.kwargs['review_id']}
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny, ])
+def signup(request):
+    """Вью отвечающая за регистрацию пользователей."""
+    serializer = UserCreationSerializer(data=request.data)
+    user = User.objects.filter(
+        username=request.data.get('username'),
+        email=request.data.get('email')).first()
+    if user:
+        confirmation_code = default_token_generator.make_token(user)
+        confirm_send_mail(user.email, confirmation_code)
+        return Response(
+            'Код выслан повторно на почту',
+            status=status.HTTP_200_OK
+        )
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny, ])
+def get_token(request):
+    """Вью отвечающая за получение токена."""
+    serializer = UserTokenCreationSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    token = serializer.save()
+    return Response(f'{token}', status=status.HTTP_200_OK)
+
+
+class AdminUserViewSet(viewsets.ModelViewSet):
+    """Вьюсет отвечающий за работу с моделью CustomUser."""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
+    permission_classes = (AdminOrSuperUserOnly, )
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('username', )
+    lookup_field = 'username'
+
+    @action(
+        detail=False,
+        methods=['GET'],
+        url_name='me',
+        url_path='me',
+        permission_classes=(IsAuthenticated, )
+    )
+    def get_self(self, request):
+        """Функция позволяющая получить данные о себе."""
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @get_self.mapping.patch
+    def patch_me(self, request):
+        """Функция позволяющая редактировать данные о себе."""
+        serializer = UserSerializer(
+            request.user,
+            data=request.data,
+            partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(role=request.user.role)
+        return Response(serializer.data, status=status.HTTP_200_OK)
