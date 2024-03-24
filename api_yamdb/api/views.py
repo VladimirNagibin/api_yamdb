@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from reviews.models import Category, Genre, Review, Title
 
 from .filters import TitleFilter
-from .permissions import (AdminOrSuperUserOnly, IsAdminOrAuthorOrReadOnly,
+from .permissions import (IsAdminOrSuperUserOnly, IsAdminOrAuthorOrReadOnly,
                           IsAdminOrSuperuserOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReviewSerializer, TitleSerializer,
@@ -138,7 +138,7 @@ class AdminUserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     http_method_names = ['get', 'post', 'patch', 'delete']
-    permission_classes = (AdminOrSuperUserOnly, )
+    permission_classes = (IsAdminOrSuperUserOnly, )
     filter_backends = (filters.SearchFilter, )
     search_fields = ('username', )
     lookup_field = 'username'
