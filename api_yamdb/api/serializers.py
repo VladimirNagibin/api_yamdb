@@ -1,12 +1,13 @@
 import datetime as dt
 
+from django.contrib.auth import get_user_model
 from django.db.models import Avg
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
 from reviews.models import Title, Genre, Category, Review, Comments
-from users.models import CustomUser
+
+User = get_user_model()
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -65,7 +66,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(queryset=CustomUser.objects.all(),
+    author = SlugRelatedField(queryset=User.objects.all(),
                               slug_field='username',
                               default=serializers.CurrentUserDefault())
 
@@ -74,9 +75,14 @@ class ReviewSerializer(serializers.ModelSerializer):
         exclude = ('title',)
 
     def validate_author(self, author_value):
-        """Проверка уникальности пары title-author через базу Review."""
-        title_value = get_object_or_404(Title, pk=self.context['title_id'])
-        if Review.objects.filter(title=title_value, author=author_value):
+        """Проверка уникальности пары title-author через базу Review.
+
+        Проверка выполняется через встроенную функцию validate сериализатора,
+        а не get_object_or_404 для вывода требуемого по тестам кода ошибки -
+        400, а не 404.
+        """
+        if Review.objects.filter(title=self.context['title_id'],
+                                 author=author_value):
             raise serializers.ValidationError(
                 'Невозможно создать второй отзыв на то же произведение!')
         return author_value
