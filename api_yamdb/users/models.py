@@ -4,6 +4,7 @@ from django.db import models
 
 from .constants import (ADMIN, EMAIL_FIELD_LENGTH, MAX_ROLE_LENGTH, MODERATOR,
                         ROLE_CHOICES, STANDARD_FIELD_LENGTH, USER)
+from .validation import validate_username
 
 
 class User(AbstractUser):
@@ -11,9 +12,7 @@ class User(AbstractUser):
         max_length=STANDARD_FIELD_LENGTH,
         unique=True,
         verbose_name='Имя пользователя',
-        validators=[RegexValidator(
-            regex=r'^[\w.@+-]+$',
-            message='Некорректное имя пользователя')]
+        validators=[validate_username]
     )
     email = models.EmailField(
         max_length=EMAIL_FIELD_LENGTH,

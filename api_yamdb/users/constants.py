@@ -9,4 +9,4 @@ ROLE_CHOICES = (
 
 STANDARD_FIELD_LENGTH = 150
 EMAIL_FIELD_LENGTH = 254
-MAX_ROLE_LENGTH = max([len(role[1]) for role in ROLE_CHOICES])
+MAX_ROLE_LENGTH = max([len(role) for role, _ in ROLE_CHOICES])

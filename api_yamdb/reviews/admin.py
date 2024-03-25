@@ -1,7 +1,6 @@
 from django.contrib import admin
 
 from .models import Title, Review, Category, Genre, Comments
-from users.models import User
 
 
 class CommentsAdmin(admin.ModelAdmin):
@@ -16,15 +15,8 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = ('author',)
 
 
-class UserAdmin(admin.ModelAdmin):
-    list_dispaly = ('__all__',)
-    list_filter = ['is_staff', 'role']
-    search_fields = ['username']
-
-
 admin.site.register(Title)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(Category)
 admin.site.register(Genre)
 admin.site.register(Comments, CommentsAdmin)
-admin.site.register(User, UserAdmin)
