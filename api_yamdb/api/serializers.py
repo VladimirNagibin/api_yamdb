@@ -55,26 +55,21 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(queryset=User.objects.all(),
-                              slug_field='username',
-                              default=serializers.CurrentUserDefault())
+    author = SlugRelatedField(read_only=True, slug_field='username')
 
     class Meta:
         model = Review
         exclude = ('title',)
 
-    def validate_author(self, author_value):
-        """Проверка уникальности пары title-author через базу Review.
-
-        Проверка выполняется через встроенную функцию validate сериализатора,
-        а не get_object_or_404 для вывода требуемого по тестам кода ошибки -
-        400, а не 404.
-        """
-        if Review.objects.filter(title=self.context['title_id'],
-                                 author=author_value):
+    def validate(self, data):
+        """Проверка уникальности пары title-author."""
+        if Review.objects.filter(
+            title=self.context.get('view').kwargs.get('title_id'),
+            author=self.context.get('request').user
+        ) and self.context.get('request').method == 'POST':
             raise serializers.ValidationError(
                 'Невозможно создать второй отзыв на то же произведение!')
-        return author_value
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
