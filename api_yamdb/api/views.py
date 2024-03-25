@@ -66,16 +66,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_title_object(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
 
-    def get_serializer_context(self):
-        """Добавление дополнительных данных для передачи в сериализатор.
-
-        При отсутствии данного метода в сериализаторе не будет данных для
-        необходимого метода класса CurrentUserDefault() и
-        метода validate_author.
-        """
-        return {'title_id': self.kwargs['title_id'],
-                'request': self.request}
-
     def perform_create(self, serializer):
         """Переопределение единичной операции сохранения объекта модели."""
         serializer.save(
