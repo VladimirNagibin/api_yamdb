@@ -1,5 +1,8 @@
-from django.contrib.auth import get_user_model
+import re
+
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -84,24 +87,44 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class ValidateUsernameMixin:
+
     def validate_username(self, value):
         if value == 'me':
-            raise serializers.ValidationError('Использование me запрещено')
+            raise ValidationError('Использование me запрещено')
+        string = re.match(r'^[\w.@+-]+$', value)
+        if not string:
+            raise ValidationError('Некорректное имя')
         return value
 
 
 class UserCreationSerializer(
-    serializers.ModelSerializer,
+    serializers.Serializer,
     ValidateUsernameMixin
 ):
     """Сериализатор для регистрации пользователя."""
+    username = serializers.CharField(required=True, max_length=150)
+    email = serializers.EmailField(required=True, max_length=254)
 
-    class Meta:
-        model = User
-        fields = ('username', 'email')
+    def validate(self, data):
+        if User.objects.filter(
+            username=data.get('username'),
+            email=data.get('email')
+        ):
+            return data
+        if User.objects.filter(username=data.get('username')):
+            raise serializers.ValidationError(
+                'Пользователь с таким username уже существует'
+            )
+        if User.objects.filter(email=data.get('email')):
+            raise serializers.ValidationError(
+                'Пользователь с таким email уже существует'
+            )
+        return data
 
     def create(self, validated_data):
-        user = User.objects.create(**validated_data)
+        user, _ = User.objects.get_or_create(
+            username=validated_data.get('username'),
+            email=validated_data.get('email'))
         confirmation_code = default_token_generator.make_token(user)
         confirm_send_mail(user.email, confirmation_code)
         return user

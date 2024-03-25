@@ -1,6 +1,6 @@
 from django.core.mail import send_mail
 
-from api_yamdb.settings import EMAIL_HOST_USER
+from django.conf import settings
 
 
 def confirm_send_mail(email, confirmation_code):
@@ -9,7 +9,7 @@ def confirm_send_mail(email, confirmation_code):
         subject='YaMDB Registration',
         message=('Вы успешно зарегестрированы. '
                  f'Ваш код подтверждения: {confirmation_code}'),
-        from_email=EMAIL_HOST_USER,
+        from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[email, ],
         fail_silently=True
     )

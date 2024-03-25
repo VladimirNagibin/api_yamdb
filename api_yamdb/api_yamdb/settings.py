@@ -98,7 +98,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
-EMAIL_HOST_USER = 'YaMDB@yandex.ru'
+DEFAULT_FROM_EMAIL = 'YaMDB@yandex.ru'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

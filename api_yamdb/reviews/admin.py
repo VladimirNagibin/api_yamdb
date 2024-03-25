@@ -1,7 +1,6 @@
 from django.contrib import admin
 
 from .models import Title, Review, Category, Genre, Comments
-from users.models import User
 
 
 @admin.register(Comments)
@@ -16,12 +15,6 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ('title', 'text', 'author', 'score', 'pub_date')
     search_fields = ('title',)
     list_filter = ('author',)
-
-
-class UserAdmin(admin.ModelAdmin):
-    list_dispaly = ('__all__',)
-    list_filter = ('is_staff', 'role')
-    search_fields = ('username',)
 
 
 @admin.register(Category)
@@ -46,6 +39,3 @@ class TitleAdmin(admin.ModelAdmin):
     @admin.display(description='Жанры')
     def genres(self, obj):
         return ', '.join([genre.name for genre in obj.genre.all()])
-
-
-admin.site.register(User, UserAdmin)
