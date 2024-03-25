@@ -30,23 +30,30 @@ DATA = (
 class Command(BaseCommand):
 
     def load_obj(self, filename, obj, fields):
-        with open(f'{DIR_DATA}/{filename}') as file_data:
-            reader = csv.reader(file_data)
-            header = next(reader)
-            if header == fields:
-                for row in reader:
-                    object_value = {
-                        key: value for key, value in zip(header, row)
-                    }
-                    try:
-                        obj.objects.update_or_create(**object_value)
-                    except IntegrityError:
-                        print(f'Не корректные данные: {object_value} '
-                              f'для {obj.__name__}')
-            else:
-                print(
-                    f'Структура полей не соответствует таблице {obj.__name__}'
-                )
+        try:
+            with open(f'{DIR_DATA}/{filename}', encoding='utf-8') as file_data:
+                reader = csv.reader(file_data)
+                header = next(reader)
+                if header == fields:
+                    for row in reader:
+                        object_value = {
+                            key: value for key, value in zip(header, row)
+                        }
+                        try:
+                            obj.objects.update_or_create(**object_value)
+                        except IntegrityError:
+                            self.stdout.write(f'Файл {filename} не корректные '
+                                              f'данные: {object_value} для '
+                                              f'{obj.__name__}')
+                else:
+                    self.stdout.write(f'Файл {filename} cтруктура полей не '
+                                      f'соответствует таблице {obj.__name__}')
+
+        except FileNotFoundError:
+            self.stdout.write(f'Файл {filename} невозможно открыть')
+        except Exception as e:
+            self.stdout.write(f'Ошибка {e} при работе с файлом {filename}')
+        self.stdout.write(f'Файл {filename} загружен')
 
     def handle(self, *args, **kwargs):
         for filename, obj, fields in DATA:

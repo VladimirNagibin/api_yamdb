@@ -1,11 +1,11 @@
 from rest_framework import permissions
 
 
-class IsAdminOrSuperuserOrReadOnly(permissions.BasePermission):
+class IsAdminOrReadOnly(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return (
-            ((not request.user.is_anonymous) and (request.user.is_admin))
+            (request.user.is_authenticated and request.user.is_admin)
             or request.method in permissions.SAFE_METHODS
         )
 

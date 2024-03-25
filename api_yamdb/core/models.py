@@ -1,27 +1,24 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
-from reviews.constants import TEXT_LIMIT
+from reviews.constants import NAME_MAX_LENGHT, SLUG_MAX_LENGHT, TEXT_LIMIT
 
 User = get_user_model()
 
 
 class NameModel(models.Model):
-    name = models.CharField(max_length=256)
-
-    def __str__(self):
-        return self.name
+    name = models.CharField('Название', max_length=NAME_MAX_LENGHT)
 
     class Meta:
         abstract = True
         ordering = ('name',)
 
+    def __str__(self):
+        return self.name[:TEXT_LIMIT]
+
 
 class NameSlugModel(NameModel):
-    slug = models.SlugField(unique=True, max_length=50)
-
-    def __str__(self):
-        return self.name
+    slug = models.SlugField('Слаг', unique=True, max_length=SLUG_MAX_LENGHT)
 
     class Meta(NameModel.Meta):
         abstract = True

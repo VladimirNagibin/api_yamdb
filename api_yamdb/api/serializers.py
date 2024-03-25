@@ -4,7 +4,6 @@ import re
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
@@ -39,15 +38,18 @@ class GenreRelatedField(SlugRelatedField):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField(read_only=True, default=0)
     description = serializers.CharField(required=False)
     category = CategoryRelatedField(
         slug_field='slug', queryset=Category.objects.all()
     )
     genre = GenreRelatedField(
-        slug_field='slug', many=True, queryset=Genre.objects.all()
+        slug_field='slug',
+        many=True,
+        queryset=Genre.objects.all(),
+        allow_null=False,
+        allow_empty=False
     )
-    name = serializers.CharField(max_length=256)
 
     class Meta:
         model = Title
@@ -55,43 +57,26 @@ class TitleSerializer(serializers.ModelSerializer):
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
 
-    def validate_year(self, value):
-        if not (0 < value <= dt.date.today().year):
-            raise serializers.ValidationError('Проверьте год выпуска!')
-        return value
-
-    def validate_genre(self, value):
-        if not value:
-            raise serializers.ValidationError('Не передали слаги жанров!')
-        return value
-
-    def get_rating(self, obj):
-        rating = obj.reviews.aggregate(Avg('score'))['score__avg']
-        if rating:
-            return round(rating, 2)
-
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(queryset=User.objects.all(),
-                              slug_field='username',
-                              default=serializers.CurrentUserDefault())
+    author = SlugRelatedField(read_only=True, slug_field='username')
 
     class Meta:
         model = Review
         exclude = ('title',)
 
-    def validate_author(self, author_value):
-        """Проверка уникальности пары title-author через базу Review.
-
-        Проверка выполняется через встроенную функцию validate сериализатора,
-        а не get_object_or_404 для вывода требуемого по тестам кода ошибки -
-        400, а не 404.
-        """
-        if Review.objects.filter(title=self.context['title_id'],
-                                 author=author_value):
+    def validate(self, data):
+        """Проверка уникальности пары title-author."""
+        request = self.context.get('request')
+        if request.method != 'POST':
+            return data
+        if Review.objects.filter(
+            title=self.context.get('view').kwargs.get('title_id'),
+            author=request.user
+        ):
             raise serializers.ValidationError(
                 'Невозможно создать второй отзыв на то же произведение!')
-        return author_value
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
