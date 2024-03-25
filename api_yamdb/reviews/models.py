@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .constants import MIN_SCORE, MAX_SCORE
+from .constants import MIN_SCORE, MAX_SCORE, MIN_YEAR_TITLES
 from core.models import NameModel, NameSlugModel, TextAuthorPubDateModel
 
 User = get_user_model()
@@ -22,10 +22,16 @@ class Genre(NameSlugModel):
         verbose_name_plural = 'Жанры'
 
 
+def get_current_year():
+    return dt.date.today().year
+
+
 class Title(NameModel):
-    year = models.PositiveSmallIntegerField(
+    year = models.SmallIntegerField(
         validators=(
-            MaxValueValidator(dt.date.today().year,
+            MaxValueValidator(get_current_year,
+                              message='Проверьте год выпуска!'),
+            MinValueValidator(MIN_YEAR_TITLES,
                               message='Проверьте год выпуска!'),
         ),
         verbose_name='Год выпуска',

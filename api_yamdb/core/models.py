@@ -9,12 +9,12 @@ User = get_user_model()
 class NameModel(models.Model):
     name = models.CharField('Название', max_length=NAME_MAX_LENGHT)
 
-    def __str__(self):
-        return self.name[:TEXT_LIMIT]
-
     class Meta:
         abstract = True
         ordering = ('name',)
+
+    def __str__(self):
+        return self.name[:TEXT_LIMIT]
 
 
 class NameSlugModel(NameModel):
