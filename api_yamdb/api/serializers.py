@@ -63,10 +63,13 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """Проверка уникальности пары title-author."""
+        request = self.context.get('request')
+        if request.method != 'POST':
+            return data
         if Review.objects.filter(
             title=self.context.get('view').kwargs.get('title_id'),
-            author=self.context.get('request').user
-        ) and self.context.get('request').method == 'POST':
+            author=request.user
+        ):
             raise serializers.ValidationError(
                 'Невозможно создать второй отзыв на то же произведение!')
         return data
