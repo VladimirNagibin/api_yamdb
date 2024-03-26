@@ -6,8 +6,8 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Comments, Genre, Review, Title
-from users.services import confirm_send_mail
 from users.constants import EMAIL_FIELD_LENGTH, STANDARD_FIELD_LENGTH
+from users.services import confirm_send_mail
 from users.validation import validate_username
 
 User = get_user_model()
