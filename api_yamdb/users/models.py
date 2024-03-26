@@ -1,5 +1,4 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
 from django.db import models
 
 from .constants import (ADMIN, EMAIL_FIELD_LENGTH, MAX_ROLE_LENGTH, MODERATOR,
