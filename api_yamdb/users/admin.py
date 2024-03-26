@@ -4,14 +4,9 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from users.models import User
 
 
-class UserAdmin(BaseUserAdmin):
-    list_dispaly = ('__all__',)
-    list_filter = ['is_staff', 'role']
-    search_fields = ['username']
-
-
-UserAdmin.fieldsets += (
-    ('Роль', {'fields': ('role', )}),
-)
-
-admin.site.register(User, UserAdmin)
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'first_name', 'last_name', 'bio', 'role',)
+    list_filter = ('is_staff', 'role')
+    search_fields = ('username',)
+    list_editable = ('role',)

@@ -10,6 +10,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Comments, Genre, Review, Title
 from users.services import confirm_send_mail
+from users.constants import EMAIL_FIELD_LENGTH, STANDARD_FIELD_LENGTH
+from users.validation import validate_username
 
 User = get_user_model()
 
@@ -89,12 +91,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class ValidateUsernameMixin:
 
     def validate_username(self, value):
-        if value == 'me':
-            raise ValidationError('Использование me запрещено')
-        string = re.match(r'^[\w.@+-]+$', value)
-        if not string:
-            raise ValidationError('Некорректное имя')
-        return value
+        return validate_username(value)
 
 
 class UserCreationSerializer(
@@ -102,8 +99,10 @@ class UserCreationSerializer(
     ValidateUsernameMixin
 ):
     """Сериализатор для регистрации пользователя."""
-    username = serializers.CharField(required=True, max_length=150)
-    email = serializers.EmailField(required=True, max_length=254)
+    username = serializers.CharField(
+        required=True, max_length=STANDARD_FIELD_LENGTH)
+    email = serializers.EmailField(
+        required=True, max_length=EMAIL_FIELD_LENGTH)
 
     def validate(self, data):
         if User.objects.filter(
