@@ -1,15 +1,14 @@
-import re
-
-from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Comments, Genre, Review, Title
+from users.constants import EMAIL_FIELD_LENGTH, STANDARD_FIELD_LENGTH
 from users.services import confirm_send_mail
+from users.validation import validate_username
 
 User = get_user_model()
 
@@ -89,12 +88,7 @@ class CommentSerializer(serializers.ModelSerializer):
 class ValidateUsernameMixin:
 
     def validate_username(self, value):
-        if value == 'me':
-            raise ValidationError('Использование me запрещено')
-        string = re.match(r'^[\w.@+-]+$', value)
-        if not string:
-            raise ValidationError('Некорректное имя')
-        return value
+        return validate_username(value)
 
 
 class UserCreationSerializer(
@@ -102,8 +96,10 @@ class UserCreationSerializer(
     ValidateUsernameMixin
 ):
     """Сериализатор для регистрации пользователя."""
-    username = serializers.CharField(required=True, max_length=150)
-    email = serializers.EmailField(required=True, max_length=254)
+    username = serializers.CharField(
+        required=True, max_length=STANDARD_FIELD_LENGTH)
+    email = serializers.EmailField(
+        required=True, max_length=EMAIL_FIELD_LENGTH)
 
     def validate(self, data):
         if User.objects.filter(
