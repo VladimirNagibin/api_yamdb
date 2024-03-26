@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from core.models import NameModel, NameSlugModel, TextAuthorPubDateModel
-from .constants import MIN_SCORE, MAX_SCORE, MIN_YEAR_TITLES
+from .constants import MAX_SCORE, MIN_SCORE, MIN_YEAR_TITLES
 from .validations import get_current_year
 
 User = get_user_model()
