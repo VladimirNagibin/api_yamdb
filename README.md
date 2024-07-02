@@ -23,7 +23,7 @@ git clone https://github.com/VladimirNagibin/api_yamdb.git
 cd api_yamdb
 ```
 
-Cоздать и активировать виртуальное окружение:
+Создать и активировать виртуальное окружение:
 
 ```
 python3.9 -m venv venv
@@ -96,7 +96,7 @@ python manage.py load_data
 
 Добавление категории (доступно только для администратора) - POST запрос на эндпоинт: /api/v1/categories/
 
-Удаление катиегорр (доступно только для администратора) - DELETE запрос на эндпоинт: /api/v1/categories/{slug}/
+Удаление категории (доступно только для администратора) - DELETE запрос на эндпоинт: /api/v1/categories/{slug}/
 
 ### Отзывы
 Получение списка всех отзывов - GET запрос на эндпоинт: /api/v1/titles/{title_id}/reviews/
