@@ -137,6 +137,8 @@ python manage.py load_data
 
 После запуска проекта документация API доступна по адресу: http://127.0.0.1:8000/redoc/
 
+В корень проекта нужно поместить файл .env  со значением SECRET_KEY= секретный ключ Django
+____
 
 ## Авторы проекта
 - Владимир Нагибин (Github: [@VladimirNagibin](https://github.com/VladimirNagibin/))
