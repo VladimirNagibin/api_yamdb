@@ -24,11 +24,11 @@ cd api_yamdb
 Cоздать и активировать виртуальное окружение:
 
 ```
-python -m venv venv
+python3.9 -m venv venv
 ```
 
 ```
-source venv/Scripts/activate
+source source venv/bin/activate
 ```
 
 Установить пакетный менеджер и зависимости из файла requirements.txt:
@@ -42,6 +42,10 @@ pip install -r requirements.txt
 ```
 
 Выполнить миграции:
+
+```
+cd api_yamdb/
+```
 
 ```
 python manage.py migrate
@@ -129,7 +133,9 @@ python manage.py load_data
 
 Редактирование данных своей учетной записи (доступно для любого авторизованного пользователя) PATCH запрос на эндпоинт: /api/v1/users/me/
 
-Более подробные данные: http://127.0.0.1:8000/redoc/
+Более подробное описание спецификации: http://127.0.0.1:8000/redoc/
+
+http://127.0.0.1:8000/api/v1/
 
 ## Авторы проекта
 - Владимир Нагибин (Github: [@VladimirNagibin](https://github.com/VladimirNagibin/))
